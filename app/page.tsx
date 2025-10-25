@@ -221,11 +221,16 @@ export default function Home() {
                     </p>
                     <div className="flex gap-4 mt-2">
                       <span className="text-sm text-gray-400">
-                        Due: {task.dueDate}
+                        Due:{" "}
+                        {new Date(task.dueDate).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })}
                       </span>
                       {task.assignee && (
                         <span className="text-sm text-gray-400">
-                          Assignee: {task.assignee}
+                          Assigned to: {task.assignee}
                         </span>
                       )}
                     </div>
@@ -321,7 +326,9 @@ export default function Home() {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-gray-300 mb-2">Assign To</label>
+                  <label className="block text-gray-300 mb-2">
+                    Assigned to
+                  </label>
                   <input
                     type="text"
                     value={taskForm.assignee}
