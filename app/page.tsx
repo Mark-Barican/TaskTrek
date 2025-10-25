@@ -224,55 +224,117 @@ export default function Home() {
               {tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
+                  className="bg-gray-800 border border-gray-700 rounded-lg p-4"
                 >
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg">{task.title}</h4>
-                    <p className="text-gray-400 text-sm mt-1">
-                      {task.description}
-                    </p>
-                    <div className="flex gap-4 mt-2">
-                      <span className="text-sm text-gray-400">
-                        Due:{" "}
-                        {new Date(task.dueDate).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                        })}
-                      </span>
-                      {task.assignee && (
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg">{task.title}</h4>
+                      <p className="text-gray-400 text-sm mt-1">
+                        {task.description}
+                      </p>
+                      <div className="flex gap-4 mt-2">
                         <span className="text-sm text-gray-400">
-                          Assigned to: {task.assignee}
+                          Due:{" "}
+                          {new Date(task.dueDate).toLocaleDateString("en-US", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            year: "numeric",
+                          })}
                         </span>
-                      )}
+                        {task.assignee && (
+                          <span className="text-sm text-gray-400">
+                            Assigned to: {task.assignee}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditTaskModal(task)}
+                        className="p-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+                      >
+                        <PencilIcon className="h-4 w-4 text-cyan-400" />
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="p-2 rounded bg-red-800 hover:bg-red-700 transition"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openEditTaskModal(task)}
-                      className="p-2 rounded bg-gray-700 hover:bg-gray-600 transition"
-                    >
-                      <PencilIcon className="h-4 w-4 text-cyan-400" />
-                    </button>
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      className="p-2 rounded bg-red-800 hover:bg-red-700 transition"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+
+                  {/* Status Update Buttons */}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-400">Status:</span>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() =>
+                            updateTaskStatus(task.id, "not-started")
+                          }
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            task.status === "not-started"
+                              ? "bg-red-500 text-white"
+                              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          }`}
+                        >
+                          Not Started
+                        </button>
+                        <button
+                          onClick={() =>
+                            updateTaskStatus(task.id, "in-progress")
+                          }
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            task.status === "in-progress"
+                              ? "bg-yellow-500 text-black"
+                              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          }`}
+                        >
+                          In Progress
+                        </button>
+                        <button
+                          onClick={() => updateTaskStatus(task.id, "completed")}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            task.status === "completed"
+                              ? "bg-green-500 text-white"
+                              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          }`}
+                        >
+                          Completed
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          task.status === "not-started"
+                            ? "bg-red-900/50 text-red-400"
+                            : task.status === "in-progress"
+                            ? "bg-yellow-900/50 text-yellow-400"
+                            : "bg-green-900/50 text-green-400"
+                        }`}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
+                        {task.status === "not-started"
+                          ? "Not Started"
+                          : task.status === "in-progress"
+                          ? "In Progress"
+                          : "Completed"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
