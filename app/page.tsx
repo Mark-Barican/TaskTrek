@@ -113,6 +113,18 @@ export default function Home() {
     setTasks(tasks.filter((task) => task.id !== id));
   };
 
+  // Function to update task status
+  const updateTaskStatus = (
+    id: number,
+    newStatus: "not-started" | "in-progress" | "completed"
+  ) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, status: newStatus } : task
+      )
+    );
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-950 text-white">
       {/* Sidebar */}
@@ -269,8 +281,167 @@ export default function Home() {
         )}
 
         {activeSection === "progressTracking" && (
-          <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
-            (Progress Tracking UI will go here)
+          <section className="bg-gray-900 border-gray-800 rounded-2xl p-6">
+            <h3 className="text-xl font-semibold mb-6">
+              Task Progress Overview
+            </h3>
+
+            {/* Progress Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <h4 className="font-medium text-gray-300 mb-2">Not Started</h4>
+                <p className="text-3xl font-bold text-red-40">
+                  {tasks.filter((task) => task.status === "not-started").length}
+                </p>
+              </div>
+              <div className="bg-gray-800 border border-gray-70 rounded-lg p-4">
+                <h4 className="font-medium text-gray-300 mb-2">In Progress</h4>
+                <p className="text-3xl font-bold text-yellow-400">
+                  {tasks.filter((task) => task.status === "in-progress").length}
+                </p>
+              </div>
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <h4 className="font-medium text-gray-300 mb-2">Completed</h4>
+                <p className="text-3xl font-bold text-green-40">
+                  {tasks.filter((task) => task.status === "completed").length}
+                </p>
+              </div>
+            </div>
+
+            {/* Progress Bar Visualization */}
+            <div className="mb-8">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-300">Overall Progress</span>
+                <span className="text-gray-300">
+                  {Math.round(
+                    (tasks.filter((task) => task.status === "completed")
+                      .length /
+                      tasks.length) *
+                      100
+                  ) || 0}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-4">
+                <div
+                  className="bg-cyan-60 h-4 rounded-full"
+                  style={{
+                    width: `${
+                      (tasks.filter((task) => task.status === "completed")
+                        .length /
+                        tasks.length) *
+                        100 || 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Task Status Breakdown */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-lg">Task Status Breakdown</h4>
+
+              {/* Not Started Tasks */}
+              <div className="border border-gray-700 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                  <h5 className="font-medium">
+                    Not Started (
+                    {
+                      tasks.filter((task) => task.status === "not-started")
+                        .length
+                    }
+                    )
+                  </h5>
+                </div>
+                <div className="ml-5 space-y-2">
+                  {tasks
+                    .filter((task) => task.status === "not-started")
+                    .map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center text-gray-300"
+                      >
+                        <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                        <span>{task.title}</span>
+                      </div>
+                    ))}
+                  {tasks.filter((task) => task.status === "not-started")
+                    .length === 0 && (
+                    <p className="text-gray-500 text-sm">
+                      No tasks in this category
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* In Progress Tasks */}
+              <div className="border border-gray-700 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                  <h5 className="font-medium">
+                    In Progress (
+                    {
+                      tasks.filter((task) => task.status === "in-progress")
+                        .length
+                    }
+                    )
+                  </h5>
+                </div>
+                <div className="ml-5 space-y-2">
+                  {tasks
+                    .filter((task) => task.status === "in-progress")
+                    .map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center text-gray-300"
+                      >
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                        <span>{task.title}</span>
+                      </div>
+                    ))}
+                  {tasks.filter((task) => task.status === "in-progress")
+                    .length === 0 && (
+                    <p className="text-gray-500 text-sm">
+                      No tasks in this category
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Completed Tasks */}
+              <div className="border border-gray-700 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <h5 className="font-medium">
+                    Completed (
+                    {tasks.filter((task) => task.status === "completed").length}
+                    )
+                  </h5>
+                </div>
+                <div className="ml-5 space-y-2">
+                  {tasks
+                    .filter((task) => task.status === "completed")
+                    .map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center text-gray-300"
+                      >
+                        <div className="w-2 h-2 bg-green-50 rounded-full mr-3"></div>
+                        <span className="line-through text-gray-500">
+                          {task.title}
+                        </span>
+                      </div>
+                    ))}
+                  {tasks.filter((task) => task.status === "completed")
+                    .length === 0 && (
+                    <p className="text-gray-500 text-sm">
+                      No tasks in this category
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
