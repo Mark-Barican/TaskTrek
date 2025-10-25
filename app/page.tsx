@@ -1,11 +1,117 @@
 "use client";
 
 import { useState } from "react";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import {
+  Cog6ToothIcon,
+  PlusIcon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
+
+// Define TypeScript interfaces
+interface Task {
+  id: number;
+  title: string;
+  description: string;
+  dueDate: string;
+  status: "not-started" | "in-progress" | "completed";
+  assignee?: string;
+}
+
+interface TaskFormState {
+  title: string;
+  description: string;
+  dueDate: string;
+  assignee: string;
+}
 
 export default function Home() {
   // State to control which section is visible
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const [activeSection, setActiveSection] = useState<string>("dashboard");
+
+  // Task management state
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: 1,
+      title: "Math Homework",
+      description: "Complete algebra exercises",
+      dueDate: "2025-10-30",
+      status: "not-started",
+    },
+    {
+      id: 2,
+      title: "Science Project",
+      description: "Research on climate change",
+      dueDate: "2025-11-05",
+      status: "in-progress",
+    },
+    {
+      id: 3,
+      title: "History Essay",
+      description: "Write about World War II",
+      dueDate: "2025-11-10",
+      status: "completed",
+    },
+  ]);
+
+  const [showTaskModal, setShowTaskModal] = useState<boolean>(false);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
+  const [taskForm, setTaskForm] = useState<TaskFormState>({
+    title: "",
+    description: "",
+    dueDate: "",
+    assignee: "",
+  });
+
+  // Function to handle adding/editing tasks
+  const handleTaskSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (currentTask) {
+      // Update existing task
+      setTasks(
+        tasks.map((task) =>
+          task.id === currentTask.id ? { ...task, ...taskForm } : task
+        )
+      );
+    } else {
+      // Add new task
+      const newTask: Task = {
+        id: Date.now(),
+        ...taskForm,
+        status: "not-started",
+      };
+      setTasks([...tasks, newTask]);
+    }
+
+    // Reset form and close modal
+    setTaskForm({ title: "", description: "", dueDate: "", assignee: "" });
+    setCurrentTask(null);
+    setShowTaskModal(false);
+  };
+
+  // Function to open modal for adding a new task
+  const openAddTaskModal = () => {
+    setCurrentTask(null);
+    setTaskForm({ title: "", description: "", dueDate: "", assignee: "" });
+    setShowTaskModal(true);
+  };
+
+  // Function to open modal for editing a task
+  const openEditTaskModal = (task: Task) => {
+    setCurrentTask(task);
+    setTaskForm({
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      assignee: task.assignee || "",
+    });
+    setShowTaskModal(true);
+  };
+
+  // Function to delete a task
+  const deleteTask = (id: number) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-950 text-white">
@@ -88,8 +194,72 @@ export default function Home() {
         )}
 
         {activeSection === "taskManagement" && (
-          <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
-            (Task Management UI will go here)
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            {/* Task Management Header with + Button */}
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold">Manage Your Tasks</h3>
+              <button
+                onClick={openAddTaskModal}
+                className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Add Task
+              </button>
+            </div>
+
+            {/* Task List */}
+            <div className="space-y-4">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex justify-between items-center"
+                >
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg">{task.title}</h4>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {task.description}
+                    </p>
+                    <div className="flex gap-4 mt-2">
+                      <span className="text-sm text-gray-400">
+                        Due: {task.dueDate}
+                      </span>
+                      {task.assignee && (
+                        <span className="text-sm text-gray-400">
+                          Assignee: {task.assignee}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditTaskModal(task)}
+                      className="p-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+                    >
+                      <PencilIcon className="h-4 w-4 text-cyan-400" />
+                    </button>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="p-2 rounded bg-red-800 hover:bg-red-700 transition"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
@@ -98,10 +268,100 @@ export default function Home() {
             (Progress Tracking UI will go here)
           </section>
         )}
+
+        {/* Task Creation/Edit Modal */}
+        {showTaskModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                {currentTask ? "Edit Task" : "Create New Task"}
+              </h3>
+
+              <form onSubmit={handleTaskSubmit}>
+                <div className="mb-4">
+                  <label className="block text-gray-300 mb-2">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={taskForm.title}
+                    onChange={(e) =>
+                      setTaskForm({ ...taskForm, title: e.target.value })
+                    }
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-gray-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={taskForm.description}
+                    onChange={(e) =>
+                      setTaskForm({ ...taskForm, description: e.target.value })
+                    }
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-gray-300 mb-2">Due Date *</label>
+                  <input
+                    type="date"
+                    value={taskForm.dueDate}
+                    onChange={(e) =>
+                      setTaskForm({ ...taskForm, dueDate: e.target.value })
+                    }
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                    required
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-gray-300 mb-2">Assign To</label>
+                  <input
+                    type="text"
+                    value={taskForm.assignee}
+                    onChange={(e) =>
+                      setTaskForm({ ...taskForm, assignee: e.target.value })
+                    }
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                    placeholder="Enter assignee name"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTaskModal(false);
+                      setCurrentTask(null);
+                      setTaskForm({
+                        title: "",
+                        description: "",
+                        dueDate: "",
+                        assignee: "",
+                      });
+                    }}
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition"
+                  >
+                    {currentTask ? "Update Task" : "Create Task"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
-
-
-
