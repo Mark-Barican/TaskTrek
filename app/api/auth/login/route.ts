@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import pool from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
@@ -15,16 +15,19 @@ export async function POST(request: Request) {
     }
 
     // Find user
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const result = await pool.query(
+      'SELECT * FROM "User" WHERE email = $1',
+      [email]
+    );
 
-    if (!user) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
+
+    const user = result.rows[0];
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -44,7 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate a simple token (in production, use JWT)
+    // Generate a simple token
     const token = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 
     return NextResponse.json(
@@ -62,9 +65,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
 }
-

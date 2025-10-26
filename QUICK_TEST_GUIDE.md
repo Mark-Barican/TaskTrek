@@ -189,3 +189,4 @@ Your TaskTrek application is now:
 
 Start by registering at: **http://localhost:3000/register**
 
+
