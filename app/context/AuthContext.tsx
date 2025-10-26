@@ -3,13 +3,13 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
-// 🔹 Define user structure
+
 interface User {
   email: string;
   password: string;
 }
 
-// 🔹 Define context type
+
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => boolean;
@@ -17,13 +17,13 @@ interface AuthContextType {
   logout: () => void;
 }
 
-// 🔹 Create context
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
-  // Load users from localStorage (simulated database)
+  
   const [users, setUsers] = useState<User[]>(
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem("users") || "[]")
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       : null
   );
 
-  // ✅ Register new user
+ 
   const register = (email: string, password: string) => {
     const existingUser = users.find((u) => u.email === email);
 
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  // ✅ Login validation
+ 
   const login = (email: string, password: string) => {
     const existingUser = users.find(
       (u) => u.email === email && u.password === password
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Logout function
+  
   const logout = () => {
     setUser(null);
     localStorage.removeItem("currentUser");
@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// 🔹 Custom hook for convenience
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

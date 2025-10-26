@@ -1,19 +1,18 @@
 "use client";
 
-import ProtectedRoute from "./components/ProtectedRoute";
-import { useAuth } from "./context/AuthContext";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { Cog6ToothIcon, ArrowLeftOnRectangleIcon } from "@heroicons/react/24/outline";
+import { useAuth } from "./context/AuthContext";
 
 export default function Home() {
-  const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState("dashboard");
+  const { user, logout } = useAuth(); 
 
   return (
-    <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-950 text-white">
-        {/* Sidebar */}
-        <aside className="w-64 bg-gray-900 border-r border-gray-800 p-6 flex flex-col">
+    <div className="flex min-h-screen bg-gray-950 text-white">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-900 border-r border-gray-800 p-6 flex flex-col justify-between">
+        <div>
           <h1 className="text-2xl font-bold text-cyan-400 mb-8">🎓 TaskTrek</h1>
           <nav className="space-y-3">
             <button
@@ -49,50 +48,70 @@ export default function Home() {
               Progress Tracking
             </button>
           </nav>
+        </div>
 
+        {/* ✅ Logout Button */}
+        <div className="mt-8 border-t border-gray-800 pt-4">
           <button
             onClick={logout}
-            className="mt-auto text-red-400 hover:text-red-300 text-sm"
+            className="flex items-center justify-center w-full py-2 rounded-lg bg-gray-800 hover:bg-red-500 hover:text-white transition"
           >
+            <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-2" />
             Logout
           </button>
-        </aside>
+        </div>
+      </aside>
 
-        {/* Main Area */}
-        <main className="flex-1 p-10 overflow-y-auto">
-          <header className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-cyan-300">
-                {activeSection === "dashboard"
-                  ? "Student Task Dashboard"
-                  : activeSection === "taskManagement"
-                  ? "Task Management"
-                  : "Progress Tracking"}
-              </h2>
-            </div>
+      {/* Main Content Area */}
+      <main className="flex-1 p-10 overflow-y-auto">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-cyan-300">
+              {activeSection === "dashboard"
+                ? "Student Task Dashboard"
+                : activeSection === "taskManagement"
+                ? "Task Management"
+                : "Progress Tracking"}
+            </h2>
+            <p className="text-gray-400">
+              {activeSection === "dashboard"
+                ? "View and filter your tasks efficiently"
+                : activeSection === "taskManagement"
+                ? "Create, assign, delete, and manage due dates"
+                : "Monitor task progress: Not Started, In Progress, Completed"}
+            </p>
+          </div>
 
+          <div className="flex items-center space-x-6">
             <button className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition">
               <Cog6ToothIcon className="h-6 w-6 text-cyan-400" />
             </button>
-          </header>
+            <div className="text-gray-400">
+              Welcome, {user?.email || "Student"} 👋
+            </div>
+          </div>
+        </header>
 
-          {activeSection === "dashboard" && (
-            <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
-              (Dashboard content here)
-            </section>
-          )}
-          {activeSection === "taskManagement" && (
-            <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
-              (Task Management content)
-            </section>
-          )}
-          {activeSection === "progressTracking" && (
-            <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
-              (Progress Tracking content)
-            </section>
-          )}
-        </main>
-      </div>
-    </ProtectedRoute>
+        {/* Conditionally Rendered Sections */}
+        {activeSection === "dashboard" && (
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
+            (Dashboard content will go here)
+          </section>
+        )}
+
+        {activeSection === "taskManagement" && (
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
+            (Task Management UI will go here)
+          </section>
+        )}
+
+        {activeSection === "progressTracking" && (
+          <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
+            (Progress Tracking UI will go here)
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
