@@ -14,7 +14,7 @@ export default function RegisterForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -24,7 +24,7 @@ export default function RegisterForm() {
       return;
     }
 
-    const ok = register(email.trim(), password, role);
+    const ok = await register(email.trim(), password, role);
     if (ok) {
       setSuccess("Account created. Redirecting to login...");
       setTimeout(() => router.push("/login"), 1200);
