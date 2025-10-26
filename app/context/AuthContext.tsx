@@ -1,81 +1,60 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { useRouter } from "next/navigation";
-
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 interface User {
   email: string;
-  password: string;
+  role: "student" | "admin";
+  token: string;
 }
-
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  register: (email: string, password: string) => boolean;
+  login: (email: string, password: string, role: "student" | "admin") => boolean;
+  register: (email: string, password: string, role: "student" | "admin") => boolean;
   logout: () => void;
 }
 
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const router = useRouter();
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
 
-  
-  const [users, setUsers] = useState<User[]>(
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("users") || "[]")
-      : []
-  );
+  const login = (email: string, password: string, role: "student" | "admin") => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const found = users.find(
+      (u: any) => u.email === email && u.password === password && u.role === role
+    );
 
-  const [user, setUser] = useState<User | null>(
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("currentUser") || "null")
-      : null
-  );
-
- 
-  const register = (email: string, password: string) => {
-    const existingUser = users.find((u) => u.email === email);
-
-    if (existingUser) {
-      alert("User already exists!");
-      return false;
+    if (found) {
+      const fakeToken = `jwt-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      const loggedUser = { email, role, token: fakeToken };
+      localStorage.setItem("user", JSON.stringify(loggedUser));
+      setUser(loggedUser);
+      return true;
     }
+    return false;
+  };
 
-    const newUser = { email, password };
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    alert("Registration successful! You can now log in.");
-    router.push("/login");
+  const register = (email: string, password: string, role: "student" | "admin") => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const exists = users.some((u: any) => u.email === email);
+    if (exists) return false;
+
+    const newUser = { email, password, role };
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
     return true;
   };
 
- 
-  const login = (email: string, password: string) => {
-    const existingUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (existingUser) {
-      setUser(existingUser);
-      localStorage.setItem("currentUser", JSON.stringify(existingUser));
-      router.push("/");
-      return true;
-    } else {
-      alert("Invalid email or password.");
-      return false;
-    }
-  };
-
-  
   const logout = () => {
+    localStorage.removeItem("user");
     setUser(null);
-    localStorage.removeItem("currentUser");
-    router.push("/login");
   };
 
   return (
@@ -85,10 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
