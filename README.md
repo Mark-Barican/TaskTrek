@@ -84,13 +84,39 @@ Make sure to add these for **Production**, **Preview**, and **Development** envi
 ### Step 4: Deploy
 Vercel will automatically build and deploy your application. The `postinstall` script will run `prisma generate` automatically during the build process.
 
+### Step 5: Initialize Database Schema
+
+After your first successful deployment, you need to create the database tables:
+
+1. Go to your Neon dashboard
+2. Click "SQL Editor"
+3. Copy and paste the SQL commands from `DATABASE_SETUP.md`
+4. Execute the SQL to create the User and Task tables
+
+Alternatively, if you have the project locally with DATABASE_URL configured:
+```bash
+npx prisma db push
+```
+
+See `DATABASE_SETUP.md` for detailed instructions.
+
 ## Features
 
 - ✅ User Authentication (Login/Register/Logout)
+  - Secure password hashing with bcryptjs
+  - Role-based access (Student/Admin)
+  - PostgreSQL database storage
 - ✅ Task Dashboard with statistics
+  - Real-time task counts
+  - Progress visualization
+  - Upcoming deadlines
 - ✅ Task Management (Create, Edit, Delete)
+  - Full CRUD operations
+  - Database persistence
+  - User-specific tasks
 - ✅ Progress Tracking
-- ✅ Task Status Management (Not Started, In Progress, Completed)
+  - Status updates (Not Started, In Progress, Completed)
+  - Visual progress bars
 - ✅ Due Date Tracking
 - ✅ Modern Dark Theme UI
 
@@ -100,6 +126,19 @@ Vercel will automatically build and deploy your application. The `postinstall` s
 - **Language**: TypeScript
 - **Database**: PostgreSQL (Neon)
 - **ORM**: Prisma
+- **Authentication**: bcryptjs for password hashing
 - **Styling**: Tailwind CSS
 - **Icons**: Heroicons, Lucide React
 - **Deployment**: Vercel
+
+## API Routes
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+
+### Tasks
+- `GET /api/tasks?userId={id}` - Get all tasks for a user
+- `POST /api/tasks` - Create a new task
+- `PUT /api/tasks` - Update a task
+- `DELETE /api/tasks?id={id}&userId={userId}` - Delete a task

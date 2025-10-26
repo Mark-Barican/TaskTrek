@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Cog6ToothIcon,
@@ -33,6 +33,7 @@ export default function Home() {
 
   // State to control which section is visible
   const [activeSection, setActiveSection] = useState<string>("dashboard");
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
 
   // Handle logout
   const handleLogout = () => {
@@ -41,29 +42,7 @@ export default function Home() {
   };
 
   // Task management state
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: 1,
-      title: "Math Homework",
-      description: "Complete algebra exercises",
-      dueDate: "2025-10-30",
-      status: "not-started",
-    },
-    {
-      id: 2,
-      title: "Science Project",
-      description: "Research on climate change",
-      dueDate: "2025-11-05",
-      status: "in-progress",
-    },
-    {
-      id: 3,
-      title: "History Essay",
-      description: "Write about World War II",
-      dueDate: "2025-11-10",
-      status: "completed",
-    },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   const [showTaskModal, setShowTaskModal] = useState<boolean>(false);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
@@ -74,31 +53,80 @@ export default function Home() {
     assignee: "",
   });
 
-  // Function to handle adding/editing tasks
-  const handleTaskSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (currentTask) {
-      // Update existing task
-      setTasks(
-        tasks.map((task) =>
-          task.id === currentTask.id ? { ...task, ...taskForm } : task
-        )
-      );
-    } else {
-      // Add new task
-      const newTask: Task = {
-        id: Date.now(),
-        ...taskForm,
-        status: "not-started",
-      };
-      setTasks([...tasks, newTask]);
+  // Fetch tasks from database
+  const fetchTasks = async () => {
+    if (!user) return;
+    
+    setIsLoadingTasks(true);
+    try {
+      const response = await fetch(`/api/tasks?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(data.tasks.map((task: any) => ({
+          ...task,
+          dueDate: task.dueDate.split('T')[0], // Format date for display
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    } finally {
+      setIsLoadingTasks(false);
     }
+  };
 
-    // Reset form and close modal
-    setTaskForm({ title: "", description: "", dueDate: "", assignee: "" });
-    setCurrentTask(null);
-    setShowTaskModal(false);
+  // Load tasks when user is available
+  useEffect(() => {
+    if (user) {
+      fetchTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Function to handle adding/editing tasks
+  const handleTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    try {
+      if (currentTask) {
+        // Update existing task
+        const response = await fetch("/api/tasks", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: currentTask.id,
+            userId: user.id,
+            ...taskForm,
+          }),
+        });
+
+        if (response.ok) {
+          await fetchTasks(); // Refresh tasks
+        }
+      } else {
+        // Add new task
+        const response = await fetch("/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...taskForm,
+            userId: user.id,
+            status: "not-started",
+          }),
+        });
+
+        if (response.ok) {
+          await fetchTasks(); // Refresh tasks
+        }
+      }
+
+      // Reset form and close modal
+      setTaskForm({ title: "", description: "", dueDate: "", assignee: "" });
+      setCurrentTask(null);
+      setShowTaskModal(false);
+    } catch (error) {
+      console.error("Error submitting task:", error);
+    }
   };
 
   // Function to open modal for adding a new task
@@ -121,20 +149,46 @@ export default function Home() {
   };
 
   // Function to delete a task
-  const deleteTask = (id: number) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const deleteTask = async (id: number) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`/api/tasks?id=${id}&userId=${user.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchTasks(); // Refresh tasks
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
   // Function to update task status
-  const updateTaskStatus = (
+  const updateTaskStatus = async (
     id: number,
     newStatus: "not-started" | "in-progress" | "completed"
   ) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, status: newStatus } : task
-      )
-    );
+    if (!user) return;
+
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          userId: user.id,
+          status: newStatus,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchTasks(); // Refresh tasks
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    }
   };
 
   return (

@@ -13,13 +13,13 @@ export default function LoginPage() {
   const [role, setRole] = useState<"student" | "admin">("student");
   const [error, setError] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password) {
       setError("Please enter both email and password.");
       return;
     }
 
-    const ok = login(email, password, role); // ✅ now includes role
+    const ok = await login(email, password, role); // ✅ now includes role
     if (ok) {
       router.push("/"); // redirect to main page (change if needed)
     } else {

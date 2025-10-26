@@ -14,13 +14,13 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email.trim() || !password) {
       setError("Please fill in all fields.");
       return;
     }
 
-    const ok = register(email, password, role); // ✅ Now includes role
+    const ok = await register(email, password, role); // ✅ Now includes role
 
     if (ok) {
       setSuccess(true);

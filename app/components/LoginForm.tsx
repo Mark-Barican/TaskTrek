@@ -13,11 +13,11 @@ export default function LoginForm() {
   const [role, setRole] = useState<"student" | "admin">("student");
   const [error, setError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const ok = login(email.trim(), password, role);
+    const ok = await login(email.trim(), password, role);
     if (ok) {
       router.push("/"); // go to dashboard (change to /main if needed)
     } else {
