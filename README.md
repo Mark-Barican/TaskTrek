@@ -1,15 +1,42 @@
-Dependencies:
+# TaskTrek - Student Task Management System
 
-- npm install next react react-dom
-- npm install tailwindcss postcss autoprefixer
-- npm install next react react-dom lucide-react @heroicons/react
-- npm install -D tailwindcss postcss autoprefixer typescript eslint
+A modern task management application built with Next.js, React, and PostgreSQL (Neon).
 
-- This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Prerequisites
 
-## Getting Started
+- Node.js 18+ installed
+- A Neon PostgreSQL database account (free tier available at [neon.tech](https://neon.tech))
 
-First, run the development server:
+## Setup Instructions
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Database
+
+1. Create a free account at [Neon.tech](https://neon.tech)
+2. Create a new project
+3. Copy your connection string from the Neon dashboard
+4. Create a `.env.local` file in the root directory:
+
+```env
+DATABASE_URL="postgresql://username:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://username:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require"
+```
+
+Replace the connection strings with your actual Neon database URLs.
+
+### 3. Initialize Database
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
@@ -38,6 +65,41 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Step 1: Push to GitHub
+Ensure your code is pushed to a GitHub repository.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Step 2: Import to Vercel
+1. Go to [Vercel](https://vercel.com)
+2. Click "New Project"
+3. Import your GitHub repository
+
+### Step 3: Configure Environment Variables
+In your Vercel project settings, add the following environment variables:
+
+- `DATABASE_URL`: Your Neon database connection string
+- `DIRECT_URL`: Your Neon database direct connection string (optional, same as DATABASE_URL)
+
+Make sure to add these for **Production**, **Preview**, and **Development** environments.
+
+### Step 4: Deploy
+Vercel will automatically build and deploy your application. The `postinstall` script will run `prisma generate` automatically during the build process.
+
+## Features
+
+- ✅ User Authentication (Login/Register/Logout)
+- ✅ Task Dashboard with statistics
+- ✅ Task Management (Create, Edit, Delete)
+- ✅ Progress Tracking
+- ✅ Task Status Management (Not Started, In Progress, Completed)
+- ✅ Due Date Tracking
+- ✅ Modern Dark Theme UI
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Database**: PostgreSQL (Neon)
+- **ORM**: Prisma
+- **Styling**: Tailwind CSS
+- **Icons**: Heroicons, Lucide React
+- **Deployment**: Vercel

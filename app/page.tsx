@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Cog6ToothIcon,
   PlusIcon,
   PencilIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import { useAuth } from "./context/AuthContext";
 
 // Define TypeScript interfaces
 interface Task {
@@ -25,8 +28,17 @@ interface TaskFormState {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
   // State to control which section is visible
   const [activeSection, setActiveSection] = useState<string>("dashboard");
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   // Task management state
   const [tasks, setTasks] = useState<Task[]>([
@@ -194,7 +206,19 @@ export default function Home() {
             </button>
 
             {/* User Welcome */}
-            <div className="text-gray-400">Welcome, Student 👋</div>
+            <div className="text-gray-400">
+              Welcome, {user?.email || "Student"} 👋
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+              title="Logout"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+              <span>Logout</span>
+            </button>
           </div>
         </header>
 
