@@ -2,9 +2,14 @@
 
 ## Overview
 
-TaskTrek now uses PostgreSQL (Neon) to store:
+TaskTrek uses **Neon PostgreSQL** database with **Prisma ORM** to store:
 - User accounts (email, password, role)
 - Tasks (title, description, due date, status, assignee)
+
+### Understanding the Setup
+- **Neon** = Your cloud PostgreSQL database (where data is stored)
+- **Prisma** = ORM tool that connects your app to Neon (how you access data)
+- You use Prisma to talk to your Neon database - this is the recommended approach!
 
 ## Quick Setup for Vercel Deployment
 
