@@ -200,8 +200,184 @@ export default function Home() {
 
         {/* Conditionally Rendered Sections */}
         {activeSection === "dashboard" && (
-          <section className="bg-gray-900 border border-gray-800 rounded-2xl h-60 flex items-center justify-center text-gray-500">
-            (Dashboard content will go here)
+          <section className="space-y-8">
+            {/* Dashboard Header */}
+            <div>
+              <h2 className="text-3xl font-bold text-cyan-300"></h2>
+              <p className="text-gray-400"></p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                <div className="text-gray-400 text-sm">Total Tasks</div>
+                <div className="text-3xl font-bold text-white mt-1">
+                  {tasks.length}
+                </div>
+              </div>
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                <div className="text-gray-400 text-sm">Completed</div>
+                <div className="text-3xl font-bold text-green-400 mt-1">
+                  {tasks.filter((task) => task.status === "completed").length}
+                </div>
+              </div>
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                <div className="text-gray-400 text-sm">In Progress</div>
+                <div className="text-3xl font-bold text-yellow-400 mt-1">
+                  {tasks.filter((task) => task.status === "in-progress").length}
+                </div>
+              </div>
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                <div className="text-gray-400 text-sm">Not Started</div>
+                <div className="text-3xl font-bold text-red-400 mt-1">
+                  {tasks.filter((task) => task.status === "not-started").length}
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-300">Overall Progress</span>
+                <span className="text-gray-300">
+                  {Math.round(
+                    (tasks.filter((task) => task.status === "completed")
+                      .length /
+                      tasks.length) *
+                      100
+                  ) || 0}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-4">
+                <div
+                  className="bg-cyan-600 h-4 rounded-full"
+                  style={{
+                    width: `${
+                      (tasks.filter((task) => task.status === "completed")
+                        .length /
+                        tasks.length) *
+                        100 || 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Upcoming Deadlines and Recent Tasks */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Upcoming Deadlines */}
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                <h3 className="text-xl font-semibold mb-4">
+                  Upcoming Deadlines
+                </h3>
+                <div className="space-y-3">
+                  {tasks
+                    .filter((task) => {
+                      const today = new Date();
+                      const dueDate = new Date(task.dueDate);
+                      const diffTime = dueDate.getTime() - today.getTime();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 24));
+                      return diffDays >= 0 && diffDays <= 7;
+                    })
+                    .sort(
+                      (a, b) =>
+                        new Date(a.dueDate).getTime() -
+                        new Date(b.dueDate).getTime()
+                    )
+                    .map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex justify-between items-center p-3 bg-gray-900 rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">{task.title}</div>
+                          <div className="text-sm text-gray-400">
+                            Due:{" "}
+                            {new Date(task.dueDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              task.status === "not-started"
+                                ? "bg-red-900/50 text-red-400"
+                                : task.status === "in-progress"
+                                ? "bg-yellow-900/50 text-yellow-400"
+                                : "bg-green-900/50 text-green-400"
+                            }`}
+                          >
+                            {task.status === "not-started"
+                              ? "Not Started"
+                              : task.status === "in-progress"
+                              ? "In Progress"
+                              : "Completed"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  {tasks.filter((task) => {
+                    const today = new Date();
+                    const dueDate = new Date(task.dueDate);
+                    const diffTime = dueDate.getTime() - today.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 24));
+                    return diffDays >= 0 && diffDays <= 7;
+                  }).length === 0 && (
+                    <div className="text-gray-500 text-center py-4">
+                      No upcoming deadlines in the next 7 days
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent Tasks */}
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+                <h3 className="text-xl font-semibold mb-4">Recent Tasks</h3>
+                <div className="space-y-3">
+                  {[...tasks]
+                    .sort((a, b) => b.id - a.id)
+                    .slice(0, 5)
+                    .map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex justify-between items-center p-3 bg-gray-900 rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">{task.title}</div>
+                          <div className="text-sm text-gray-400">
+                            {new Date(task.dueDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </div>
+                        </div>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            task.status === "not-started"
+                              ? "bg-red-900/50 text-red-400"
+                              : task.status === "in-progress"
+                              ? "bg-yellow-900/50 text-yellow-400"
+                              : "bg-green-900/50 text-green-400"
+                          }`}
+                        >
+                          {task.status === "not-started"
+                            ? "Not Started"
+                            : task.status === "in-progress"
+                            ? "In Progress"
+                            : "Completed"}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
