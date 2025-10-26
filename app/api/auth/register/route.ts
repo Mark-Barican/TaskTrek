@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import pool from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
@@ -15,11 +15,12 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await pool.query(
+      'SELECT id FROM "User" WHERE email = $1',
+      [email]
+    );
 
-    if (existingUser) {
+    if (existingUser.rows.length > 0) {
       return NextResponse.json(
         { error: 'User already exists' },
         { status: 409 }
@@ -30,13 +31,12 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role,
-      },
-    });
+    const result = await pool.query(
+      'INSERT INTO "User" (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role, "createdAt"',
+      [email, hashedPassword, role]
+    );
+
+    const user = result.rows[0];
 
     return NextResponse.json(
       {
@@ -52,9 +52,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
 }
-

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import pool from '@/lib/db';
 
 // GET all tasks for a user
 export async function GET(request: Request) {
@@ -14,20 +14,16 @@ export async function GET(request: Request) {
       );
     }
 
-    const tasks = await prisma.task.findMany({
-      where: {
-        userId: parseInt(userId),
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const result = await pool.query(
+      'SELECT * FROM "Task" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
+      [parseInt(userId)]
+    );
 
-    return NextResponse.json({ tasks }, { status: 200 });
+    return NextResponse.json({ tasks: result.rows }, { status: 200 });
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -45,22 +41,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const task = await prisma.task.create({
-      data: {
-        title,
-        description: description || '',
-        dueDate: new Date(dueDate),
-        status: status || 'not-started',
-        assignee: assignee || null,
-        userId: parseInt(userId),
-      },
-    });
+    const result = await pool.query(
+      'INSERT INTO "Task" (title, description, "dueDate", status, assignee, "userId") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [title, description || '', new Date(dueDate), status || 'not-started', assignee || null, parseInt(userId)]
+    );
 
-    return NextResponse.json({ task }, { status: 201 });
+    return NextResponse.json({ task: result.rows[0] }, { status: 201 });
   } catch (error) {
     console.error('Error creating task:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -79,36 +69,62 @@ export async function PUT(request: Request) {
     }
 
     // Verify the task belongs to the user
-    const existingTask = await prisma.task.findFirst({
-      where: {
-        id: parseInt(id),
-        userId: parseInt(userId),
-      },
-    });
+    const verifyResult = await pool.query(
+      'SELECT id FROM "Task" WHERE id = $1 AND "userId" = $2',
+      [parseInt(id), parseInt(userId)]
+    );
 
-    if (!existingTask) {
+    if (verifyResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Task not found or unauthorized' },
         { status: 404 }
       );
     }
 
-    const task = await prisma.task.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...(title && { title }),
-        ...(description !== undefined && { description }),
-        ...(dueDate && { dueDate: new Date(dueDate) }),
-        ...(status && { status }),
-        ...(assignee !== undefined && { assignee }),
-      },
-    });
+    // Build update query dynamically
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
 
-    return NextResponse.json({ task }, { status: 200 });
+    if (title) {
+      updates.push(`title = $${paramCount++}`);
+      values.push(title);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramCount++}`);
+      values.push(description);
+    }
+    if (dueDate) {
+      updates.push(`"dueDate" = $${paramCount++}`);
+      values.push(new Date(dueDate));
+    }
+    if (status) {
+      updates.push(`status = $${paramCount++}`);
+      values.push(status);
+    }
+    if (assignee !== undefined) {
+      updates.push(`assignee = $${paramCount++}`);
+      values.push(assignee);
+    }
+
+    values.push(parseInt(id));
+
+    const result = await pool.query(
+      `UPDATE "Task" SET ${updates.join(', ')}, "updatedAt" = CURRENT_TIMESTAMP WHERE id = $${paramCount}`,
+      values
+    );
+
+    // Fetch updated task
+    const updatedResult = await pool.query(
+      'SELECT * FROM "Task" WHERE id = $1',
+      [parseInt(id)]
+    );
+
+    return NextResponse.json({ task: updatedResult.rows[0] }, { status: 200 });
   } catch (error) {
     console.error('Error updating task:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -129,23 +145,22 @@ export async function DELETE(request: Request) {
     }
 
     // Verify the task belongs to the user
-    const existingTask = await prisma.task.findFirst({
-      where: {
-        id: parseInt(id),
-        userId: parseInt(userId),
-      },
-    });
+    const verifyResult = await pool.query(
+      'SELECT id FROM "Task" WHERE id = $1 AND "userId" = $2',
+      [parseInt(id), parseInt(userId)]
+    );
 
-    if (!existingTask) {
+    if (verifyResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Task not found or unauthorized' },
         { status: 404 }
       );
     }
 
-    await prisma.task.delete({
-      where: { id: parseInt(id) },
-    });
+    await pool.query(
+      'DELETE FROM "Task" WHERE id = $1',
+      [parseInt(id)]
+    );
 
     return NextResponse.json(
       { message: 'Task deleted successfully' },
@@ -154,9 +169,8 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error('Error deleting task:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
 }
-
